@@ -38,6 +38,7 @@ def calc():
     try:
         data = request.json
         question = data.get("question", "")
+        lang = data.get("lang", "en-us")
         
         result = calculate_left_to_right(question)
         
@@ -60,7 +61,8 @@ Rules:
 5. Roblox Filter: Ensure the response passes the roblox chat-filter.
 6. Number Format: Use digits. For large numbers, use suffixes (1K, 1M, 1B) if the number has more than 6 digits.
 7. Meme Logic: Use humor for numbers like 911, 420, 666, 69, etc.
-8. Content: Strictly respect these constraints.
+8. Language: You MUST write your entire response in the language associated with this locale: {lang}.
+9. Content: Strictly respect these constraints.
 """
 
         response = client.models.generate_content(
@@ -76,4 +78,3 @@ Rules:
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
