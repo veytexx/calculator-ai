@@ -5,7 +5,7 @@ import re
 
 app = Flask(__name__)
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyB4fZUBzdmBLGgO_-E-y5LoOzw-5BX5G2M")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 def calculate_left_to_right(expression):
@@ -76,3 +76,4 @@ Rules:
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
