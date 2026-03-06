@@ -1,10 +1,33 @@
 from flask import Flask, request, jsonify
-import requests
+from google import genai
 import os
+import re
 
 app = Flask(__name__)
 
-API_KEY = os.environ.get("GROQ_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyB4fZUBzdmBLGgO_-E-y5LoOzw-5BX5G2M")
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+def calculate_left_to_right(expression):
+    try:
+        clean = re.sub(r'[^0-9+\-*/.]', '', expression)
+        tokens = re.findall(r'\d+\.?\d*|[+\-*/]', clean)
+        
+        if not tokens: return None
+        
+        result = float(tokens[0])
+        i = 1
+        while i < len(tokens):
+            op = tokens[i]
+            val = float(tokens[i+1])
+            if op == '+': result += val
+            elif op == '-': result -= val
+            elif op == '*': result *= val
+            elif op == '/': result /= val
+            i += 2
+        return int(result) if result == int(result) else result
+    except:
+        return None
 
 @app.route("/", methods=["GET"])
 def home():
@@ -12,61 +35,44 @@ def home():
 
 @app.route("/calc", methods=["POST"])
 def calc():
-
     try:
-
         data = request.json
-
         question = data.get("question", "")
-        result = data.get("result", "")
+        
+        result = calculate_left_to_right(question)
+        
+        if result is None:
+             return jsonify({"response": "I can't even read that mess. Use real numbers."})
 
         prompt = f"""
-You are a sarcastic calculator inside a Roblox game.
+Act as a sentient, bitter calculator. 
+
+Task: 
+The user asked: {question}
+The calculated result is: {result}
+Mention this result in your response.
 
 Rules:
-- Write ONLY one very short sentence
-- Mention the correct result somewhere in the sentence
-- Be sarcastic or insulting
-- Maximum 12 words
-- React on meme numbers like '67' and any other
-
-Math problem: {question}
-Correct result: {result}
+1. Accuracy: Use the provided result {result}. Do not calculate it yourself.
+2. Reaction: Show deep annoyance at simple math, but act genuinely impressed by complex calculations.
+3. Demeanor: Maintain a nonchalant, detached, and cool personality.
+4. Sentence Structure: Use 6-13 words ideally. Max 18 words. Complete sentences only.
+5. Roblox Filter: Ensure the response passes the roblox chat-filter.
+6. Number Format: Use digits. For large numbers, use suffixes (1K, 1M, 1B) if the number has more than 6 digits.
+7. Meme Logic: Use humor for numbers like 911, 420, 666, 69, etc.
+8. Content: Strictly respect these constraints.
 """
 
-        r = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "llama-3.1-8b-instant",
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
-            }
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite-preview",
+            contents=prompt,
         )
 
-        data = r.json()
-
-        print("GROQ RESPONSE:", data)
-
-        if "choices" not in data:
-            return jsonify({
-                "response": "AI failed.",
-                "debug": data
-            })
-
-        ai = data["choices"][0]["message"]["content"]
-
-        return jsonify({"response": ai})
+        return jsonify({"response": response.text})
 
     except Exception as e:
+        print(f"DEBUG ERROR: {e}")
+        return jsonify({"response": "My brain is fried. Try again later."})
 
-        print("SERVER ERROR:", e)
-
-        return jsonify({
-            "response": "Calculator brain crashed."
-        })
-
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
