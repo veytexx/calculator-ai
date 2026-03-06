@@ -29,28 +29,29 @@ Correct result: {result}
 """
 
         r = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "llama3-8b-8192",
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
-            },
-            timeout=10
-        )
+    "https://api.groq.com/openai/v1/chat/completions",
+    headers={
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "llama3-8b-8192",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    }
+)
 
-        data = r.json()
+data = r.json()
+print("FULL GROQ RESPONSE:", data)
 
-        print("Groq response:", data)
+if "choices" not in data:
+    return jsonify({
+        "response": "AI error",
+        "debug": data
+    })
 
-        if "choices" not in data:
-            return jsonify({"response": "The calculator AI is currently confused."})
-
-        ai = data["choices"][0]["message"]["content"]
+ai = data["choices"][0]["message"]["content"]
 
         return jsonify({"response": ai})
 
@@ -62,3 +63,4 @@ Correct result: {result}
 @app.route("/", methods=["GET"])
 def home():
     return "Calculator AI running."
+
