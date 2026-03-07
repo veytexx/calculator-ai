@@ -1,12 +1,12 @@
 from flask import Flask, request, jsonify
-from google import genai
+from openai import OpenAI
 import os
 import re
 
 app = Flask(__name__)
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-client = genai.Client(api_key=GEMINI_API_KEY)
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 def calculate_left_to_right(expression):
     try:
@@ -44,12 +44,7 @@ def calc():
         is_custom = data.get("fullCustomPrompt", False)
         
         if is_custom:
-            final_prompt = f"""{question}
-
-Rules:
-1. Language: You MUST respond in the language associated with this locale: {lang}. If invalid or missing, default to English.
-2. Roblox: Ensure the response is appropriate and passes the Roblox chat filter.
-"""
+            final_prompt = f"{question}\n\nRules:\n1. Language: Use {lang}. Default to English.\n2. Roblox: Pass Roblox filter."
         else:
             result = calculate_left_to_right(question)
             if result is None:
@@ -68,15 +63,18 @@ Rules:
 5. Roblox: Pass Roblox filter.
 6. Format: Use digits and suffixes (1K, 1M).
 7. Memes: Humor for 911, 420, 666, 69.
-8. Language: Respond in {lang}. If invalid or missing, default to English.
+8. Language: Respond in {lang}. If invalid, use English.
 """
 
-        response = client.models.generate_content(
-            model="gemini-3.1-flash-lite-preview",
-            contents=final_prompt,
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful but moody AI assistant inside a Roblox game."},
+                {"role": "user", "content": final_prompt}
+            ]
         )
 
-        return jsonify({"response": response.text})
+        return jsonify({"response": response.choices[0].message.content})
 
     except Exception as e:
         return jsonify({"response": "My brain is fried. Try again later."})
