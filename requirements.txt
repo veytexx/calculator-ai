@@ -1,4 +1,5 @@
 flask
-genai
+google-genai
 gunicorn
+
 
