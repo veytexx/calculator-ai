@@ -73,6 +73,4 @@ Rules:
         return jsonify({"response": response.text})
 
     except Exception as e:
-        print(f"DEBUG ERROR: {e}")
         return jsonify({"response": "My brain is fried. Try again later."})
-
