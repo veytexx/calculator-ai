@@ -44,7 +44,12 @@ def calc():
         is_custom = data.get("fullCustomPrompt", False)
         
         if is_custom:
-            final_prompt = f"{question}\n\nLanguage to use: {lang}"
+            final_prompt = f"""{question}
+
+Rules:
+1. Language: You MUST respond in the language associated with this locale: {lang}. If invalid or missing, default to English.
+2. Roblox: Ensure the response is appropriate and passes the Roblox chat filter.
+"""
         else:
             result = calculate_left_to_right(question)
             if result is None:
@@ -63,7 +68,7 @@ Rules:
 5. Roblox: Pass Roblox filter.
 6. Format: Use digits and suffixes (1K, 1M).
 7. Memes: Humor for 911, 420, 666, 69.
-8. Language: Respond in {lang}.
+8. Language: Respond in {lang}. If invalid or missing, default to English.
 """
 
         response = client.models.generate_content(
