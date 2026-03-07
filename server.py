@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 from google import genai
 import os
 import re
-import logging
 
 app = Flask(__name__)
 
@@ -25,7 +24,7 @@ def calculate_left_to_right(expression):
             elif op == '-': result -= val
             elif op == '*': result *= val
             elif op == '/': 
-                if val == 0: return "Division by zero? Nice try."
+                if val == 0: return None
                 result /= val
             i += 2
         return int(result) if result == int(result) else result
@@ -40,9 +39,6 @@ def home():
 def calc():
     try:
         data = request.json
-        if not data:
-            return jsonify({"response": "No data received."}), 400
-            
         question = data.get("question", "")
         lang = data.get("lang", "en-us")
         is_custom = data.get("fullCustomPrompt", False)
@@ -53,9 +49,6 @@ def calc():
             result = calculate_left_to_right(question)
             if result is None:
                 return jsonify({"response": "I can't even read that mess. Use real numbers."})
-            
-            if isinstance(result, str):
-                return jsonify({"response": result})
 
             final_prompt = f"""
 Act as a sentient, bitter calculator. 
@@ -74,15 +67,11 @@ Rules:
 """
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash-lite-preview",
+            model="gemini-3.1-flash-lite-preview",
             contents=final_prompt,
         )
 
-        if response and response.text:
-            return jsonify({"response": response.text})
-        else:
-            return jsonify({"response": "Empty response from AI."})
+        return jsonify({"response": response.text})
 
     except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({"response": f"Server Error: {str(e)}"})
+        return jsonify({"response": "My brain is fried. Try again later."})
