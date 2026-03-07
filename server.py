@@ -44,7 +44,7 @@ def calc():
         is_custom = data.get("fullCustomPrompt", False)
         
         if is_custom:
-            final_prompt = question
+            final_prompt = f"{question}\n\nLanguage to use: {lang}"
         else:
             result = calculate_left_to_right(question)
             if result is None:
