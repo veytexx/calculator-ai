@@ -76,4 +76,4 @@ Rules:
         return jsonify({"response": response.text})
 
     except Exception as e:
-        return jsonify({"response": "I can't response right now."})
+        return jsonify({"response": "I can't respond right now."})
