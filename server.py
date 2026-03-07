@@ -76,5 +76,3 @@ Rules:
         print(f"DEBUG ERROR: {e}")
         return jsonify({"response": "My brain is fried. Try again later."})
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
