@@ -12,9 +12,7 @@ def calculate_left_to_right(expression):
     try:
         clean = re.sub(r'[^0-9+\-*/.]', '', expression)
         tokens = re.findall(r'\d+\.?\d*|[+\-*/]', clean)
-        
         if not tokens: return None
-        
         result = float(tokens[0])
         i = 1
         while i < len(tokens):
@@ -41,13 +39,16 @@ def calc():
         data = request.json
         question = data.get("question", "")
         lang = data.get("lang", "en-us")
+        is_custom = data.get("fullCustomPrompt", False)
         
-        result = calculate_left_to_right(question)
-        
-        if result is None:
-             return jsonify({"response": "I can't even read that mess. Use real numbers."})
+        if is_custom:
+            prompt = f"Respond to this prompt. You MUST write your entire response in the language associated with this locale: {lang}. Content: {question}"
+        else:
+            result = calculate_left_to_right(question)
+            if result is None:
+                 return jsonify({"response": "I can't even read that mess. Use real numbers."})
 
-        prompt = f"""
+            prompt = f"""
 Act as a sentient, bitter calculator. 
 
 Task: 
@@ -76,4 +77,3 @@ Rules:
 
     except Exception as e:
         return jsonify({"response": "My brain is fried. Try again later."})
-
