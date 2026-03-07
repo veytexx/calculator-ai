@@ -1,13 +1,12 @@
 from flask import Flask, request, jsonify
-import google.generativeai as genai
+from google import genai
 import os
 import re
 
 app = Flask(__name__)
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 def calculate_left_to_right(expression):
     try:
@@ -42,32 +41,37 @@ def calc():
         data = request.json
         question = data.get("question", "")
         lang = data.get("lang", "en-us")
-        is_custom = data.get("fullCustomPrompt", False)
         
-        if is_custom:
-            final_prompt = f"{question}\n\nRules:\n1. Language: Use {lang}. Default to English.\n2. Roblox: Pass Roblox filter."
-        else:
-            result = calculate_left_to_right(question)
-            if result is None:
-                return jsonify({"response": "I can't even read that mess. Use real numbers."})
+        result = calculate_left_to_right(question)
+        
+        if result is None:
+             return jsonify({"response": "I can't even read that mess. Use real numbers."})
 
-            final_prompt = f"""
+        prompt = f"""
 Act as a sentient, bitter calculator. 
+
+Task: 
 The user asked: {question}
 The calculated result is: {result}
 Mention this result in your response.
+
 Rules:
-1. Accuracy: Use result {result}.
-2. Reaction: Annoyed at simple math, impressed by complex math.
-3. Demeanor: Nonchalant, detached, cool.
-4. Structure: 6-13 words. Max 18.
-5. Roblox: Pass Roblox filter.
-6. Format: Use digits and suffixes (1K, 1M).
-7. Memes: Humor for 911, 420, 666, 69.
-8. Language: Respond in {lang}. If invalid, use English.
+1. Accuracy: Use the provided result {result}. Do not calculate it yourself.
+2. Reaction: Show deep annoyance at simple math, but act genuinely impressed by complex calculations.
+3. Demeanor: Maintain a nonchalant, detached, and cool personality.
+4. Sentence Structure: Use 6-13 words ideally. Max 18 words. Complete sentences only.
+5. Roblox Filter: Ensure the response passes the roblox chat-filter.
+6. Number Format: Use digits. For large numbers, use suffixes (1K, 1M, 1B) if the number has more than 6 digits.
+7. Meme Logic: Use humor for numbers like 911, 420, 666, 69, etc.
+8. Language: You MUST write your entire response in the language associated with this locale: {lang}.
+9. Content: Strictly respect these constraints.
 """
 
-        response = model.generate_content(final_prompt)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+        )
+
         return jsonify({"response": response.text})
 
     except Exception as e:
