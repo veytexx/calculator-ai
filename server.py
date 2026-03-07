@@ -68,7 +68,7 @@ Rules:
 """
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-3.1-flash-lite-preview",
             contents=prompt,
         )
 
@@ -76,3 +76,4 @@ Rules:
 
     except Exception as e:
         return jsonify({"response": "My brain is fried. Try again later."})
+
